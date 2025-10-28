@@ -241,8 +241,8 @@ class FeedbackLearner:
 
         insights = {
             "user_id": user_id,
-            "engagement_state": user_profile.current_engagement_state.value,
-            "behavioral_archetype": user_profile.behavioral_archetype.value,
+            "engagement_state": user_profile.current_engagement_state if isinstance(user_profile.current_engagement_state, str) else user_profile.current_engagement_state.value,
+            "behavioral_archetype": user_profile.behavioral_archetype if isinstance(user_profile.behavioral_archetype, str) else user_profile.behavioral_archetype.value,
             "total_reward": stats.get("total_reward", 0),
             "cards_completed": stats.get("completed_cards", 0),
             "completion_rate": (

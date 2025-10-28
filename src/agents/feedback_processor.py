@@ -61,15 +61,15 @@ class FeedbackProcessor:
                 user_id=user_id,
                 event_type="user_state_transition",
                 metadata={
-                    "from_state": current_state.value,
-                    "to_state": new_state.value,
+                    "from_state": current_state if isinstance(current_state, str) else current_state.value,
+                    "to_state": new_state if isinstance(new_state, str) else new_state.value,
                 },
                 reward_score=1000.0,  # High reward for state transition
             )
             await self.memory.save_feedback(transition_event)
 
             logger.info(
-                f"User {user_id} transitioned: {current_state.value} -> {new_state.value}"
+                f"User {user_id} transitioned: {current_state if isinstance(current_state, str) else current_state.value} -> {new_state if isinstance(new_state, str) else new_state.value}"
             )
 
             return True

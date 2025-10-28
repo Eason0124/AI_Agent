@@ -145,7 +145,12 @@ class BingoAgentGraph:
 
         # Run graph
         try:
-            final_state = await self.graph.ainvoke(initial_state)
+            result = await self.graph.ainvoke(initial_state)
+            # LangGraph returns dict, convert back to BingoAgentState
+            if isinstance(result, dict):
+                final_state = BingoAgentState(**result)
+            else:
+                final_state = result
             logger.info(f"Workflow completed for user {user_id}")
             return final_state
 

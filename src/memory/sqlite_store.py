@@ -174,6 +174,15 @@ class SQLiteMemoryStore(MemoryStore):
 
         try:
             async with aiosqlite.connect(self.db_path) as db:
+                # Serialize tiles to JSON with datetime handling
+                tiles_data = []
+                for t in card.tiles:
+                    tile_dict = t.model_dump()
+                    # Convert datetime to ISO string
+                    if tile_dict.get('completed_at'):
+                        tile_dict['completed_at'] = tile_dict['completed_at'].isoformat()
+                    tiles_data.append(tile_dict)
+
                 await db.execute(
                     """
                     INSERT OR REPLACE INTO bingo_cards
@@ -185,10 +194,10 @@ class SQLiteMemoryStore(MemoryStore):
                     (
                         card.card_id,
                         card.user_id,
-                        card.dimension.value,
+                        card.dimension.value if hasattr(card.dimension, 'value') else card.dimension,
                         card.duration_days,
-                        card.tile_profile.value,
-                        json.dumps([t.model_dump() for t in card.tiles]),
+                        card.tile_profile.value if hasattr(card.tile_profile, 'value') else card.tile_profile,
+                        json.dumps(tiles_data),
                         card.created_at.isoformat(),
                         card.expires_at.isoformat(),
                         card.started,
