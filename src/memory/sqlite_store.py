@@ -124,8 +124,8 @@ class SQLiteMemoryStore(MemoryStore):
                     """,
                     (
                         profile.user_id,
-                        profile.current_engagement_state.value,
-                        profile.behavioral_archetype.value,
+                        profile.current_engagement_state if isinstance(profile.current_engagement_state, str) else profile.current_engagement_state.value,
+                        profile.behavioral_archetype if isinstance(profile.behavioral_archetype, str) else profile.behavioral_archetype.value,
                         profile.trip_history.model_dump_json(),
                         profile.bingo_history.model_dump_json(),
                         profile.created_at.isoformat(),

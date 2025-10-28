@@ -55,7 +55,7 @@ class StateLoader:
                 AgentAction(
                     action_type="state_loaded",
                     details={
-                        "engagement_state": user_profile.current_engagement_state.value,
+                        "engagement_state": user_profile.current_engagement_state if isinstance(user_profile.current_engagement_state, str) else user_profile.current_engagement_state.value,
                         "has_active_card": active_card is not None,
                         "recent_feedback_count": len(state.recent_feedback),
                     },
@@ -65,7 +65,7 @@ class StateLoader:
 
             logger.info(
                 f"State loaded successfully for user {state.user_id} "
-                f"(state: {user_profile.current_engagement_state.value})"
+                f"(state: {user_profile.current_engagement_state if isinstance(user_profile.current_engagement_state, str) else user_profile.current_engagement_state.value})"
             )
 
         except Exception as e:
