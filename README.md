@@ -2,6 +2,8 @@
 
 一個基於 LangGraph 的 AI Agent，用於優化 Bingo 卡片遊戲化功能的用戶參與度和習慣養成。該系統能根據用戶反饋和歷史記憶來動態調整決策。
 
+**✨ 新功能：GPT-4o-mini 集成** - 現在支援使用 GPT-4o-mini 生成個性化的卡片描述和智能提醒消息！[查看 LLM 集成文檔](./LLM_INTEGRATION.md)
+
 ## 🎯 核心功能
 
 ### 1. 智能卡片生成
@@ -96,6 +98,10 @@ pip install -r requirements.txt
 ```bash
 cp .env.example .env
 # 編輯 .env 文件設置您的配置
+
+# 如果要使用 LLM 功能，請添加 OpenAI API Key：
+OPENAI_API_KEY=your_api_key_here
+LLM_MODEL=gpt-4o-mini
 ```
 
 ### 基礎使用
@@ -147,6 +153,27 @@ async def main():
 asyncio.run(main())
 ```
 
+### LLM 增強使用 (可選)
+
+如果想要使用 GPT-4o-mini 生成個性化內容：
+
+```python
+from src.graph import LLMBingoAgentGraph  # 使用 LLM 增強版本
+
+# 需要先設置 OPENAI_API_KEY 在 .env 文件中
+agent = LLMBingoAgentGraph(memory_store)
+
+# 生成卡片 - 會使用 LLM 創建個性化的方塊描述
+result = await agent.generate_card_for_user("user_001")
+
+# 提醒消息也會被個性化
+reminder_result = await agent.check_reminder_for_user("user_001")
+print(reminder_result.reminder_decision.message_text)
+# 輸出類似："你快完成了！再完成2個方塊就贏了！🎯"
+```
+
+完整的 LLM 功能文檔請查看 [LLM_INTEGRATION.md](./LLM_INTEGRATION.md)
+
 ### 運行示例
 
 ```bash
@@ -155,6 +182,12 @@ python examples/basic_usage.py
 
 # API 集成示例
 python examples/api_integration.py
+
+# LLM 功能演示（需要 OpenAI API Key）
+python examples/llm_demo.py
+
+# 快速測試 LLM
+python test_llm.py
 ```
 
 ## 📊 核心決策邏輯
