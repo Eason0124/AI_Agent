@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Bingo Card AI Agent - 互動演示</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            overflow: hidden;
+        }
+
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message.agent {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.agent .message-content {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .thinking {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .action {
+            font-size: 12px;
+            color: #667eea;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+
+        .input-area button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .input-area button:hover {
+            transform: scale(1.05);
+        }
+
+        .input-area button:active {
+            transform: scale(0.95);
+        }
+
+        .sidebar {
+            background: #fafafa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-card h3 {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-card p {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            padding: 10px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+        }
+
+        .loading {
+            text-align: center;
+            color: #888;
+            padding: 20px;
+        }
+
+        .emoji {
+            font-size: 20px;
+            margin-right: 5px;
+        }
+
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 聊天區域 -->
+        <div class="chat-section">
+            <div class="header">
+                <h1>🎮 Bingo Card AI Agent</h1>
+                <p>基於 LangGraph + 記憶 + 反饋學習的智能代理</p>
+            </div>
+
+            <div class="messages" id="messages">
+                <div class="message agent">
+                    <div class="message-content">
+                        <span class="emoji">👋</span>
+                        歡迎來到 Bingo Card AI Agent 互動演示！<br><br>
+                        我是一個能根據您的行為和反饋進行學習的 AI Agent。<br><br>
+                        請輸入「開始」來註冊並開始您的遊戲化旅程！
+                    </div>
+                </div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="輸入訊息..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">發送</button>
+            </div>
+        </div>
+
+        <!-- 側邊欄 -->
+        <div class="sidebar">
+            <h2>💡 快速操作</h2>
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="quickSend('開始')">🚀 開始</button>
+                <button class="quick-btn" onclick="quickSend('生成卡片')">🎲 生成卡片</button>
+                <button class="quick-btn" onclick="quickSend('完成任務')">✅ 完成任務</button>
+                <button class="quick-btn" onclick="quickSend('查看狀態')">📊 查看狀態</button>
+            </div>
+
+            <div class="info-card">
+                <h3>🎯 當前狀態</h3>
+                <p id="currentState">尚未開始</p>
+                <div id="progressSection" style="display: none;">
+                    <p style="font-size: 12px; margin-top: 10px;">卡片進度:</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+                    <p id="progressText" style="font-size: 11px; color: #888; margin-top: 5px;">0/0 (0%)</p>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>📖 使用說明</h3>
+                <p>
+                    <strong>可用指令：</strong><br>
+                    • 「開始」- 註冊新用戶<br>
+                    • 「生成卡片」- 獲取新卡片<br>
+                    • 「完成任務」- 完成一個任務<br>
+                    • 「查看狀態」- 查看進度<br>
+                    • 「查看獎勵」- 查看積分
+                </p>
+            </div>
+
+            <div class="info-card">
+                <h3>🏆 獎勵規則</h3>
+                <p>
+                    • 開始卡片: +10 分<br>
+                    • 完成卡片: +100 分<br>
+                    • 狀態升級: +1000 分
+                </p>
+            </div>
+
+            <div class="info-card">
+                <h3>⬆️ 狀態升級</h3>
+                <p>
+                    State 3 (新手) → State 4 (活躍)<br>
+                    <span style="font-size: 11px; color: #888;">完成第一張卡片即可升級</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const messagesDiv = document.getElementById('messages');
+        const userInput = document.getElementById('userInput');
+        const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function quickSend(message) {
+            userInput.value = message;
+            sendMessage();
+        }
+
+        async function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            // 顯示用戶消息
+            addMessage('user', message);
+            userInput.value = '';
+
+            // 顯示載入中
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'loading';
+            loadingDiv.id = 'loading';
+            loadingDiv.innerHTML = '<span class="emoji">🤔</span> Agent 思考中...';
+            messagesDiv.appendChild(loadingDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            try {
+                // 發送到後端
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        message: message
+                    })
+                });
+
+                const data = await response.json();
+
+                // 移除載入中
+                const loading = document.getElementById('loading');
+                if (loading) loading.remove();
+
+                // 顯示 Agent 回應
+                addAgentMessage(data);
+
+                // 更新側邊欄狀態
+                updateSidebar(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                const loading = document.getElementById('loading');
+                if (loading) loading.remove();
+                addMessage('agent', '抱歉，發生錯誤了：' + error.message);
+            }
+        }
+
+        function addMessage(type, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.innerHTML = content.replace(/\n/g, '<br>');
+
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addAgentMessage(data) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message agent';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            let html = data.message.replace(/\n/g, '<br>');
+
+            if (data.thinking) {
+                html += `<div class="thinking">💭 ${data.thinking}</div>`;
+            }
+
+            if (data.action) {
+                html += `<div class="action">⚡ ${data.action}</div>`;
+            }
+
+            contentDiv.innerHTML = html;
+            messageDiv.appendChild(contentDiv);
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updateSidebar(data) {
+            // 更新狀態
+            if (data.user_state) {
+                const stateMap = {
+                    'State_3_Pre_Active': '🌱 State 3 (新手)',
+                    'State_4_Active': '🔥 State 4 (活躍)',
+                    'State_5_Engaged': '⭐ State 5 (深度參與)'
+                };
+                document.getElementById('currentState').innerHTML =
+                    stateMap[data.user_state] || data.user_state;
+            }
+
+            // 更新進度
+            if (data.progress) {
+                const progressSection = document.getElementById('progressSection');
+                progressSection.style.display = 'block';
+
+                const percentage = data.progress.percentage || 0;
+                document.getElementById('progressFill').style.width = percentage + '%';
+                document.getElementById('progressText').textContent =
+                    `${data.progress.completed}/${data.progress.total} (${percentage.toFixed(0)}%)`;
+            }
+        }
+
+        // 初始化
+        console.log('Bingo Card AI Agent 已啟動！');
+        console.log('User ID:', userId);
+    </script>
+</body>
+</html>
