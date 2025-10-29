@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎮 Bingo Card AI Agent - 互動演示 (獨立版)</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            min-height: 90vh;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            overflow: hidden;
+        }
+
+        .chat-section {
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #e0e0e0;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            animation: fadeIn 0.3s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message.user {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .message.agent {
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            white-space: pre-line;
+        }
+
+        .message.user .message-content {
+            background: #667eea;
+            color: white;
+        }
+
+        .message.agent .message-content {
+            background: white;
+            color: #333;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .thinking {
+            font-size: 12px;
+            color: #888;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .action {
+            font-size: 12px;
+            color: #667eea;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+
+        .input-area {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e0e0e0;
+            display: flex;
+            gap: 10px;
+        }
+
+        .input-area input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .input-area input:focus {
+            border-color: #667eea;
+        }
+
+        .input-area button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .input-area button:hover {
+            transform: scale(1.05);
+        }
+
+        .sidebar {
+            background: #fafafa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .info-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-card h3 {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .info-card p {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .quick-btn {
+            padding: 10px;
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            border-radius: 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: #e3f2fd;
+            color: #1976d2;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-section">
+            <div class="header">
+                <h1>🎮 Bingo Card AI Agent</h1>
+                <p>模擬演示版 - 在本地瀏覽器中運行</p>
+            </div>
+
+            <div class="messages" id="messages"></div>
+
+            <div class="input-area">
+                <input type="text" id="userInput" placeholder="輸入訊息..." onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()">發送</button>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h2>💡 快速操作</h2>
+            <div class="quick-actions">
+                <button class="quick-btn" onclick="quickSend('開始')">🚀 開始</button>
+                <button class="quick-btn" onclick="quickSend('生成卡片')">🎲 生成卡片</button>
+                <button class="quick-btn" onclick="quickSend('完成任務')">✅ 完成任務</button>
+                <button class="quick-btn" onclick="quickSend('查看狀態')">📊 查看狀態</button>
+            </div>
+
+            <div class="info-card">
+                <h3>🎯 當前狀態</h3>
+                <p id="currentState">尚未開始</p>
+                <div id="progressSection" style="display: none;">
+                    <p style="font-size: 12px; margin-top: 10px;">卡片進度:</p>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p id="progressText" style="font-size: 11px; color: #888; margin-top: 5px;">0/0 (0%)</p>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>📖 使用說明</h3>
+                <p>
+                    <strong>可用指令：</strong><br>
+                    • 「開始」- 註冊新用戶<br>
+                    • 「生成卡片」- 獲取新卡片<br>
+                    • 「完成任務」- 完成一個任務<br>
+                    • 「查看狀態」- 查看進度<br>
+                    • 「查看獎勵」- 查看積分
+                </p>
+            </div>
+
+            <div class="info-card">
+                <h3>ℹ️ 關於此演示</h3>
+                <p style="font-size: 12px;">
+                    這是一個<strong>本地模擬版本</strong>，所有邏輯在瀏覽器中運行。真實版本使用 LangGraph + SQLite 後端。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 模擬的 Agent 狀態
+        let gameState = {
+            registered: false,
+            currentState: 'State_3_Pre_Active',
+            cardGenerated: false,
+            tasksCompleted: 0,
+            totalTasks: 9,
+            totalRewards: 0,
+            cardsCompleted: 0
+        };
+
+        const messagesDiv = document.getElementById('messages');
+        const userInput = document.getElementById('userInput');
+
+        // 初始歡迎消息
+        addAgentMessage(
+            '👋 歡迎來到 Bingo Card AI Agent 模擬演示！\n\n我是一個能根據您的行為和反饋進行學習的 AI Agent。\n\n請輸入「開始」來註冊並開始您的遊戲化旅程！',
+            '等待用戶輸入...'
+        );
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        function quickSend(message) {
+            userInput.value = message;
+            sendMessage();
+        }
+
+        function sendMessage() {
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addUserMessage(message);
+            userInput.value = '';
+
+            setTimeout(() => {
+                processMessage(message);
+            }, 500);
+        }
+
+        function processMessage(message) {
+            const msg = message.toLowerCase();
+
+            if (msg.includes('開始') || msg.includes('start') || msg.includes('註冊')) {
+                handleStart();
+            } else if (msg.includes('生成') || msg.includes('卡片') || msg.includes('card')) {
+                handleGenerateCard();
+            } else if (msg.includes('完成') || msg.includes('complete') || msg.includes('finish')) {
+                handleCompleteTask();
+            } else if (msg.includes('狀態') || msg.includes('status') || msg.includes('progress')) {
+                handleStatus();
+            } else if (msg.includes('獎勵') || msg.includes('reward') || msg.includes('積分')) {
+                handleRewards();
+            } else {
+                addAgentMessage(
+                    '您可以說：\n• 「開始」- 註冊新用戶\n• 「生成卡片」- 獲取 Bingo 卡片\n• 「完成任務」- 完成任務\n• 「查看狀態」- 查看進度\n• 「查看獎勵」- 查看積分',
+                    '分析用戶意圖...'
+                );
+            }
+        }
+
+        function handleStart() {
+            if (gameState.registered) {
+                addAgentMessage(
+                    '您已經註冊過了！\n\n當前狀態：' + gameState.currentState,
+                    '檢查用戶狀態...'
+                );
+                return;
+            }
+
+            gameState.registered = true;
+            gameState.totalRewards = 0;
+
+            addAgentMessage(
+                '歡迎！🎉\n\n您已成功註冊為新用戶。\n當前狀態：State 3 (新手)\n\n說「生成卡片」來獲得您的第一張 Bingo 卡片吧！',
+                '檢測到新用戶 → 創建 State_3 檔案 → 使用 Driver_Heavy 類型',
+                '已創建用戶檔案'
+            );
+
+            updateSidebar();
+        }
+
+        function handleGenerateCard() {
+            if (!gameState.registered) {
+                addAgentMessage(
+                    '請先說「開始」來註冊。',
+                    '未找到用戶檔案...'
+                );
+                return;
+            }
+
+            if (gameState.cardGenerated && gameState.tasksCompleted < gameState.totalTasks) {
+                const progress = (gameState.tasksCompleted / gameState.totalTasks * 100).toFixed(0);
+                addAgentMessage(
+                    `您還有一張進行中的卡片！\n\n進度: ${gameState.tasksCompleted}/${gameState.totalTasks} (${progress}%)\n\n請先完成當前卡片。`,
+                    '檢測到用戶有未完成的卡片'
+                );
+                return;
+            }
+
+            gameState.cardGenerated = true;
+            gameState.tasksCompleted = 0;
+            gameState.totalTasks = 9;
+
+            const tasks = [
+                'Complete 1 driving trip',
+                'Complete 1 driving trip',
+                'Complete 1 driving trip',
+                'Complete 1 driving trip',
+                'Complete 1 driving trip',
+                'Complete 1 driving trip',
+                'Complete 1 driving trip',
+                'Check your rewards balance',
+                'Log 1 trip'
+            ];
+
+            let taskList = tasks.map((task, i) => `  ${i+1}. ${task}`).join('\n');
+
+            addAgentMessage(
+                `✨ 為您生成了新的 Bingo 卡片！\n\n配置: Profile_Easy_Wins\n維度: 3x3\n\n📋 任務列表:\n${taskList}\n\n完成所有任務可獲得 100 積分！`,
+                `用戶狀態: ${gameState.currentState} → 生成適配卡片`,
+                '已生成新卡片'
+            );
+
+            updateSidebar();
+        }
+
+        function handleCompleteTask() {
+            if (!gameState.cardGenerated) {
+                addAgentMessage(
+                    '您還沒有活躍的卡片。請先說「生成卡片」。',
+                    '沒有找到活躍卡片'
+                );
+                return;
+            }
+
+            if (gameState.tasksCompleted >= gameState.totalTasks) {
+                addAgentMessage(
+                    '恭喜！您已經完成了所有任務！🎉\n\n請說「生成卡片」來獲取新的挑戰。',
+                    '所有任務已完成'
+                );
+                return;
+            }
+
+            // 首次完成任務
+            if (gameState.tasksCompleted === 0) {
+                gameState.totalRewards += 10;
+            }
+
+            gameState.tasksCompleted++;
+
+            const progress = (gameState.tasksCompleted / gameState.totalTasks * 100).toFixed(0);
+            const remaining = gameState.totalTasks - gameState.tasksCompleted;
+            const bars = '▓'.repeat(Math.floor(progress / 10)) + '░'.repeat(10 - Math.floor(progress / 10));
+
+            if (gameState.tasksCompleted === gameState.totalTasks) {
+                // 完成所有任務
+                gameState.totalRewards += 100;
+                gameState.cardsCompleted++;
+
+                // 檢查升級
+                if (gameState.currentState === 'State_3_Pre_Active') {
+                    gameState.currentState = 'State_4_Active';
+                    gameState.totalRewards += 1000;
+
+                    addAgentMessage(
+                        '🎊 恭喜！您完成了整張卡片！\n\n✨ 重大突破！您已升級為活躍用戶！\n\n🏆 獲得獎勵:\n  • 卡片完成: +100 積分\n  • 狀態升級: +1000 積分\n  • 總計: +1110 積分\n\n現在您可以生成更有挑戰性的卡片了！',
+                        '完成所有任務 → 觸發狀態升級 → State_3 → State_4',
+                        '卡片完成 + 狀態升級'
+                    );
+                } else {
+                    addAgentMessage(
+                        '🎉 恭喜！您完成了整張卡片！\n\n獲得獎勵: +100 積分\n\n說「生成卡片」來挑戰新的卡片吧！',
+                        '完成所有任務 → 給予獎勵',
+                        '卡片完成'
+                    );
+                }
+
+                gameState.cardGenerated = false;
+            } else {
+                addAgentMessage(
+                    `✅ 完成了一個任務！\n\n進度: ${gameState.tasksCompleted}/${gameState.totalTasks} (${progress}%)\n${bars}\n\n還差 ${remaining} 個任務就能獲得大獎了！💎\n\n繼續說「完成任務」來完成更多。`,
+                    `用戶完成了第 ${gameState.tasksCompleted} 個任務`,
+                    '任務完成'
+                );
+            }
+
+            updateSidebar();
+        }
+
+        function handleStatus() {
+            if (!gameState.registered) {
+                addAgentMessage(
+                    '請先說「開始」來註冊。',
+                    '未找到用戶檔案...'
+                );
+                return;
+            }
+
+            const stateMap = {
+                'State_3_Pre_Active': 'State 3 (新手)',
+                'State_4_Active': 'State 4 (活躍)',
+                'State_5_Engaged': 'State 5 (深度參與)'
+            };
+
+            let statusMsg = `📊 您的狀態\n\n參與狀態: ${stateMap[gameState.currentState]}\n完成卡片: ${gameState.cardsCompleted} 張\n總獎勵: ${gameState.totalRewards} 積分\n\n`;
+
+            if (gameState.cardGenerated && gameState.tasksCompleted < gameState.totalTasks) {
+                const progress = (gameState.tasksCompleted / gameState.totalTasks * 100).toFixed(0);
+                statusMsg += `📋 當前卡片進度:\n  ${gameState.tasksCompleted}/${gameState.totalTasks} (${progress}%)`;
+            } else {
+                statusMsg += `📋 當前沒有活躍卡片\n  說「生成卡片」來開始新挑戰！`;
+            }
+
+            addAgentMessage(statusMsg, '查詢用戶數據...');
+        }
+
+        function handleRewards() {
+            if (!gameState.registered) {
+                addAgentMessage(
+                    '請先說「開始」來註冊。',
+                    '未找到用戶檔案...'
+                );
+                return;
+            }
+
+            const completionRate = gameState.cardsCompleted > 0 ? 100 :
+                                 (gameState.tasksCompleted / gameState.totalTasks * 100).toFixed(0);
+
+            addAgentMessage(
+                `🏆 獎勵詳情\n\n總積分: ${gameState.totalRewards}\n完成率: ${completionRate}%\n\n獎勵規則:\n  • 開始卡片: +10 分\n  • 完成卡片: +100 分\n  • 狀態升級: +1000 分`,
+                '計算總獎勵...'
+            );
+        }
+
+        function addUserMessage(text) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message user';
+            messageDiv.innerHTML = `<div class="message-content">${text}</div>`;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addAgentMessage(text, thinking, action) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message agent';
+
+            let html = `<div class="message-content">${text}`;
+            if (thinking) {
+                html += `<div class="thinking">💭 ${thinking}</div>`;
+            }
+            if (action) {
+                html += `<div class="action">⚡ ${action}</div>`;
+            }
+            html += `</div>`;
+
+            messageDiv.innerHTML = html;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function updateSidebar() {
+            const stateMap = {
+                'State_3_Pre_Active': '🌱 State 3 (新手)',
+                'State_4_Active': '🔥 State 4 (活躍)',
+                'State_5_Engaged': '⭐ State 5 (深度參與)'
+            };
+
+            document.getElementById('currentState').innerHTML =
+                gameState.registered ? stateMap[gameState.currentState] : '尚未開始';
+
+            if (gameState.cardGenerated && gameState.tasksCompleted < gameState.totalTasks) {
+                const percentage = (gameState.tasksCompleted / gameState.totalTasks * 100).toFixed(0);
+                document.getElementById('progressSection').style.display = 'block';
+                document.getElementById('progressFill').style.width = percentage + '%';
+                document.getElementById('progressText').textContent =
+                    `${gameState.tasksCompleted}/${gameState.totalTasks} (${percentage}%)`;
+            } else {
+                document.getElementById('progressSection').style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
