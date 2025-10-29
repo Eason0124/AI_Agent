@@ -12,3 +12,7 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+
+# Demo output files
+demo_output.txt
+demo_interactive.db
